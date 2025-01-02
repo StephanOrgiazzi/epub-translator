@@ -9,7 +9,7 @@ function App() {
             EPUB Translator
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            Upload an English EPUB to translate it to French
+            Upload an English EPUB to translate it to any language
           </p>
           <EpubUploader />
         </div>

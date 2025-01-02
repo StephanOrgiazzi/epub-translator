@@ -1,51 +1,56 @@
 import { useState } from 'react';
 import JSZip from 'jszip';
-import OpenAI from 'openai';
 import { DEEPSEEK_API_KEY } from '../config';
+import type { TargetLanguage } from '../components/EpubUploader';
 
 interface UseEpubTranslatorProps {
   onUpload?: (file: File) => void;
+  targetLanguage: TargetLanguage;
 }
 
-export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [translationProgress, setTranslationProgress] = useState(0);
+const languagePrompts = {
+  nl: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Dutch, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  fr: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to French, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  de: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to German, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  it: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Italian, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  pl: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Polish, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  pt_pt: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to European Portuguese, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  pt_br: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Brazilian Portuguese, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text. Use Brazilian Portuguese vocabulary and expressions.',
+  ro: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Romanian, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  sv: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Swedish, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+  es: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Spanish, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
+};
 
-  // Ensure progress never decreases
-  const updateProgress = (newProgress: number) => {
-    setTranslationProgress(prev => Math.max(prev, Math.round(newProgress)));
-  };
+const translateText = async (
+  content: string,
+  currentFileIndex: number,
+  totalFiles: number,
+  currentChunkIndex: number,
+  totalChunks: number,
+  targetLanguage: TargetLanguage,
+  updateProgress: (progress: number) => void
+): Promise<string> => {
+  try {
+    console.log(`Translating chunk ${currentChunkIndex + 1}/${totalChunks} of file ${currentFileIndex + 1}/${totalFiles}`);
+    console.log(`Chunk size: ${content.length} characters`);
 
-  // Initialize OpenAI client
-  const openai = new OpenAI({
-    apiKey: DEEPSEEK_API_KEY.startsWith('sk-') ? DEEPSEEK_API_KEY : `sk-${DEEPSEEK_API_KEY}`,
-    baseURL: 'https://api.deepseek.com/v1',
-    dangerouslyAllowBrowser: true,
-    defaultHeaders: {
-      'Content-Type': 'application/json',
-      'Accept': 'text/event-stream'
-    }
-  });
+    // Calculate base progress for this chunk
+    const baseProgress = ((currentFileIndex * totalChunks + currentChunkIndex) / (totalFiles * totalChunks)) * 100;
+    const nextChunkProgress = ((currentFileIndex * totalChunks + currentChunkIndex + 1) / (totalFiles * totalChunks)) * 100;
 
-  const translateText = async (
-    content: string,
-    currentFileIndex: number,
-    totalFiles: number,
-    currentChunkIndex: number,
-    totalChunks: number
-  ): Promise<string> => {
-    try {
-      console.log(`Translating chunk ${currentChunkIndex + 1}/${totalChunks} of file ${currentFileIndex + 1}/${totalFiles}`);
-      console.log(`Chunk size: ${content.length} characters`);
-
-      const stream = await openai.chat.completions.create({
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY.startsWith('sk-') ? DEEPSEEK_API_KEY : `sk-${DEEPSEEK_API_KEY}`}`,
+      },
+      body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
           {
             role: 'system',
-            content: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to French, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.'
+            content: languagePrompts[targetLanguage]
           },
           {
             role: 'user',
@@ -53,40 +58,110 @@ export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => 
           }
         ],
         stream: true
-      });
+      })
+    });
 
-      let finalTranslation = '';
-      let processedChars = 0;
-      
-      // Calculate base progress for this chunk
-      const baseProgress = ((currentFileIndex * totalChunks + currentChunkIndex) / (totalFiles * totalChunks)) * 100;
-      const nextChunkProgress = ((currentFileIndex * totalChunks + currentChunkIndex + 1) / (totalFiles * totalChunks)) * 100;
-      const chunkProgressRange = nextChunkProgress - baseProgress;
-      
-      // Start at the base progress
-      updateProgress(baseProgress);
+    if (!response.ok) {
+      throw new Error(`Translation failed: ${response.statusText}`);
+    }
 
-      for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content;
-        if (content) {
-          finalTranslation += content;
-          processedChars += content.length;
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let finalTranslation = '';
+    let processedChars = 0;
+    let totalChars = content.length; // Use input content length as an estimate
+    let buffer = ''; // Buffer for incomplete chunks
+
+    // Calculate progress boundaries for this chunk
+    const chunkProgressRange = nextChunkProgress - baseProgress;
+
+    // Start at the base progress
+    updateProgress(baseProgress);
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Append new chunk to buffer and split into lines
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // Keep the last line in buffer if it's incomplete
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || trimmedLine === 'data: [DONE]') continue;
           
-          // Simple linear progress based on characters received
-          const progressInChunk = Math.min(0.95, processedChars / content.length);
-          const currentProgress = baseProgress + (progressInChunk * chunkProgressRange);
-          updateProgress(currentProgress);
+          if (trimmedLine.startsWith('data: ')) {
+            try {
+              const data = trimmedLine.slice(5).trim();
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                finalTranslation += content;
+                processedChars += content.length;
+
+                // Update progress based on characters processed
+                const progressInChunk = Math.min(0.95, processedChars / totalChars);
+                const currentProgress = baseProgress + (progressInChunk * chunkProgressRange);
+                updateProgress(currentProgress);
+              }
+            } catch (e) {
+              // Only log parsing errors for non-empty data
+              if (trimmedLine !== 'data: ') {
+                console.debug('Skipping malformed chunk:', trimmedLine);
+              }
+            }
+          }
         }
       }
-
-      // When chunk is complete, set to exact next chunk progress
-      updateProgress(nextChunkProgress);
-
-      return finalTranslation;
-    } catch (error: any) {
-      console.error('Translation error:', error);
-      throw new Error(`Translation failed: ${error.message}`);
+      
+      // Process any remaining data in the buffer
+      if (buffer.trim()) {
+        const trimmedLine = buffer.trim();
+        if (trimmedLine.startsWith('data: ') && trimmedLine !== 'data: [DONE]') {
+          try {
+            const data = trimmedLine.slice(5).trim();
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              finalTranslation += content;
+            }
+          } catch (e) {
+            console.debug('Skipping malformed final chunk:', trimmedLine);
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
     }
+
+    // When chunk is complete, set to exact next chunk progress
+    updateProgress(nextChunkProgress);
+
+    return finalTranslation;
+  } catch (error: any) {
+    console.error('Translation error:', error);
+    throw new Error(`Translation failed: ${error.message}`);
+  }
+};
+
+export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslatorProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [translationProgress, setTranslationProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // Ensure progress never decreases
+  const updateProgress = (newProgress: number) => {
+    setTranslationProgress(prev => Math.max(prev, Math.round(newProgress)));
   };
 
   const processEpubFile = async (file: File) => {
@@ -126,7 +201,9 @@ export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => 
                   fileIndex,
                   htmlFiles.length,
                   i + groupIndex,
-                  chunks.length
+                  chunks.length,
+                  targetLanguage,
+                  updateProgress
                 )
               )
             );
@@ -145,7 +222,7 @@ export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => 
       const downloadUrl = URL.createObjectURL(translatedEpub);
       const downloadLink = document.createElement('a');
       downloadLink.href = downloadUrl;
-      downloadLink.download = file.name.replace('.epub', '_translated.epub');
+      downloadLink.download = file.name.replace('.epub', `_${targetLanguage}.epub`);
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
@@ -153,86 +230,12 @@ export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => 
       
       updateProgress(100);
       setIsLoading(false);
+      setSelectedFile(null);
     } catch (err: any) {
       console.error('Error processing EPUB:', err);
       setError(err.message);
       setIsLoading(false);
     }
-  };
-
-  // Helper function to split content into chunks
-  const splitContent = (content: string): string[] => {
-    const maxChunkSize = 4000; // Increased from 1500 to 4000
-    const chunks: string[] = [];
-    let currentChunk = '';
-
-    // First, find all HTML tags that we want to keep together
-    const elements = content.split(/(<(?:p|div|h[1-6]|section)[^>]*>.*?<\/(?:p|div|h[1-6]|section)>)/gs);
-
-    for (const element of elements) {
-      // If it's a complete HTML element
-      if (element.startsWith('<') && element.endsWith('>')) {
-        // If adding this element would exceed maxChunkSize
-        if (currentChunk.length + element.length > maxChunkSize) {
-          // If the current chunk is not empty, push it
-          if (currentChunk) {
-            chunks.push(currentChunk);
-            currentChunk = '';
-          }
-          // If the element itself is larger than maxChunkSize
-          if (element.length > maxChunkSize) {
-            // Split while preserving HTML structure
-            const openTagMatch = element.match(/<([a-zA-Z0-9]+)[^>]*>/);
-            const closeTagMatch = element.match(/<\/([a-zA-Z0-9]+)>/);
-            
-            if (openTagMatch && closeTagMatch) {
-              const [openTag] = openTagMatch;
-              const [closeTag] = closeTagMatch;
-              const content = element.slice(openTag.length, -closeTag.length);
-              
-              // Split content into smaller pieces
-              const contentChunks = content.match(new RegExp(`.{1,${maxChunkSize - openTag.length - closeTag.length}}`, 'g')) || [];
-              
-              // Add tags back to each chunk
-              contentChunks.forEach(chunk => {
-                chunks.push(openTag + chunk + closeTag);
-              });
-            } else {
-              // Fallback: split without preserving structure
-              const subChunks = element.match(new RegExp(`.{1,${maxChunkSize}}`, 'g')) || [];
-              chunks.push(...subChunks);
-            }
-          } else {
-            currentChunk = element;
-          }
-        } else {
-          currentChunk += element;
-        }
-      } else {
-        // For text nodes, split if needed
-        if (currentChunk.length + element.length > maxChunkSize) {
-          if (currentChunk) {
-            chunks.push(currentChunk);
-          }
-          const subChunks = element.match(new RegExp(`.{1,${maxChunkSize}}`, 'g')) || [];
-          chunks.push(...subChunks.slice(0, -1));
-          currentChunk = subChunks[subChunks.length - 1] || '';
-        } else {
-          currentChunk += element;
-        }
-      }
-    }
-
-    if (currentChunk) {
-      chunks.push(currentChunk);
-    }
-
-    console.log(`Split content into ${chunks.length} chunks`);
-    chunks.forEach((chunk, i) => {
-      console.log(`Chunk ${i + 1} size: ${chunk.length} characters`);
-    });
-
-    return chunks;
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -254,7 +257,8 @@ export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => 
       const file = e.dataTransfer.files[0];
       if (file.name.endsWith('.epub')) {
         onUpload?.(file);
-        await processEpubFile(file);
+        setSelectedFile(file);
+        setError(null);
       } else {
         setError('Please upload an EPUB file');
       }
@@ -267,10 +271,17 @@ export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => 
       const file = e.target.files[0];
       if (file.name.endsWith('.epub')) {
         onUpload?.(file);
-        await processEpubFile(file);
+        setSelectedFile(file);
+        setError(null);
       } else {
         setError('Please upload an EPUB file');
       }
+    }
+  };
+
+  const startTranslation = async () => {
+    if (selectedFile) {
+      await processEpubFile(selectedFile);
     }
   };
 
@@ -279,8 +290,85 @@ export const useEpubTranslator = ({ onUpload }: UseEpubTranslatorProps = {}) => 
     error,
     dragActive,
     translationProgress,
+    selectedFile,
     handleDrag,
     handleDrop,
     handleChange,
+    startTranslation,
   };
+};
+
+// Helper function to split content into chunks
+const splitContent = (content: string): string[] => {
+  const maxChunkSize = 4000;
+  const chunks: string[] = [];
+  let currentChunk = '';
+
+  // First, find all HTML tags that we want to keep together
+  const elements = content.split(/(<(?:p|div|h[1-6]|section)[^>]*>.*?<\/(?:p|div|h[1-6]|section)>)/gs);
+
+  for (const element of elements) {
+    // If it's a complete HTML element
+    if (element.startsWith('<') && element.endsWith('>')) {
+      // If adding this element would exceed maxChunkSize
+      if (currentChunk.length + element.length > maxChunkSize) {
+        // If the current chunk is not empty, push it
+        if (currentChunk) {
+          chunks.push(currentChunk);
+          currentChunk = '';
+        }
+        // If the element itself is larger than maxChunkSize
+        if (element.length > maxChunkSize) {
+          // Split while preserving HTML structure
+          const openTagMatch = element.match(/<([a-zA-Z0-9]+)[^>]*>/);
+          const closeTagMatch = element.match(/<\/([a-zA-Z0-9]+)>/);
+          
+          if (openTagMatch && closeTagMatch) {
+            const [openTag] = openTagMatch;
+            const [closeTag] = closeTagMatch;
+            const content = element.slice(openTag.length, -closeTag.length);
+            
+            // Split content into smaller pieces
+            const contentChunks = content.match(new RegExp(`.{1,${maxChunkSize - openTag.length - closeTag.length}}`, 'g')) || [];
+            
+            // Add tags back to each chunk
+            contentChunks.forEach(chunk => {
+              chunks.push(openTag + chunk + closeTag);
+            });
+          } else {
+            // Fallback: split without preserving structure
+            const subChunks = element.match(new RegExp(`.{1,${maxChunkSize}}`, 'g')) || [];
+            chunks.push(...subChunks);
+          }
+        } else {
+          currentChunk = element;
+        }
+      } else {
+        currentChunk += element;
+      }
+    } else {
+      // For text nodes, split if needed
+      if (currentChunk.length + element.length > maxChunkSize) {
+        if (currentChunk) {
+          chunks.push(currentChunk);
+        }
+        const subChunks = element.match(new RegExp(`.{1,${maxChunkSize}}`, 'g')) || [];
+        chunks.push(...subChunks.slice(0, -1));
+        currentChunk = subChunks[subChunks.length - 1] || '';
+      } else {
+        currentChunk += element;
+      }
+    }
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+
+  console.log(`Split content into ${chunks.length} chunks`);
+  chunks.forEach((chunk, i) => {
+    console.log(`Chunk ${i + 1} size: ${chunk.length} characters`);
+  });
+
+  return chunks;
 };
