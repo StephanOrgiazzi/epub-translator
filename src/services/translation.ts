@@ -1,4 +1,3 @@
-import { DEEPSEEK_API_KEY } from '../config';
 import { languagePrompts, TargetLanguage } from '../types/languages';
 import { RefObject } from 'react';
 
@@ -29,7 +28,7 @@ export const translateText = async (
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'deepseek-chat',

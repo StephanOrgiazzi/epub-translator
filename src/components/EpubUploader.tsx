@@ -26,12 +26,12 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: init
   } = useEpubTranslator({ targetLanguage });
 
   return (
-    <div className="min-h-screen h-screen bg-gradient-to-b from-teal-950 to-black-950 flex items-center justify-center overflow-hidden blur-[0px]">
+    <div className="min-h-screen h-screen bg-gradient-to-b from-teal-950 via-black-950 to-black-950 flex items-center justify-center overflow-hidden blur-[0px]">
 
       <div className="w-full max-w-2xl mx-4 relative">
         {/* Background blur circles for visual interest */}
-        <div className="absolute -top-20 -left-20 w-72 h-72 bg-emerald-700 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
-        <div className="absolute top-60 -right-20 w-72 h-72 bg-teal-800 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob [animation-delay:2s]"></div>
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-emerald-700 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob"></div>
+        <div className="absolute top-60 -right-20 w-72 h-72 bg-teal-800 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob [animation-delay:2s]"></div>
 
 
         {/* Main container with glassmorphism effect */}
