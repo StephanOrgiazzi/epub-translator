@@ -1,50 +1,85 @@
-# React + TypeScript + Vite
+# EPUB Translator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern web application that translates EPUB books into different languages using the DeepSeek AI model. Built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🚀 Fast and efficient EPUB translation
+- 🎯 Support for multiple languages
+- 📚 Preserves EPUB formatting and structure
+- 💫 Beautiful, modern UI with glassmorphism effects
+- 🔄 Real-time translation progress tracking
+- ⚡ Parallel chunk processing for faster translation
+- 📱 Responsive design for all devices
 
-## Expanding the ESLint configuration
+![EPUB Translator Screenshot](screenshot.png)
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Getting Started
 
-- Configure the top-level `parserOptions` property like this:
+### Prerequisites
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- Node.js (v18 or higher)
+- npm or yarn
+- DeepSeek API key
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/epub-translator.git
+cd epub-translator
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+2. Install dependencies:
+```bash
+npm install
 ```
+
+3. Create a `.env` file in the root directory and add your DeepSeek API key:
+```env
+VITE_DEEPSEEK_API_KEY=your_api_key_here
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+## Usage
+
+1. Open the application in your browser
+2. Drop an EPUB file or click to select one
+3. Choose your target translation language
+4. Wait for the translation to complete
+5. Download your translated EPUB
+
+## Technical Details
+
+### Built With
+- React 18
+- TypeScript
+- Vite
+- TailwindCSS
+- DeepSeek AI API
+
+### Key Components
+- `EpubUploader`: Main component handling file upload and UI
+- `useEpubTranslator`: Custom hook managing translation logic
+- `translation.ts`: DeepSeek API integration
+- `content.ts`: EPUB content processing
+
+### Translation Process
+1. EPUB file is parsed and HTML content extracted
+2. Content is split into optimal chunks
+3. Chunks are translated in parallel
+4. Translated content is reassembled
+5. New EPUB is generated with preserved formatting
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- DeepSeek for their powerful translation API
+- The React and Vite communities
