@@ -1,23 +1,7 @@
 import React from 'react';
 import { useEpubTranslator } from '../hooks/useEpubTranslator';
 import { truncateFilename } from '../utils/filename';
-
-export const languages = {
-  en: { name: 'English (UK)', flag: '🇬🇧' },
-  en_us: { name: 'English (US)', flag: '🇺🇸' },
-  fr: { name: 'French', flag: '🇫🇷' },
-  nl: { name: 'Dutch', flag: '🇳🇱' },
-  de: { name: 'German', flag: '🇩🇪' },
-  it: { name: 'Italian', flag: '🇮🇹' },
-  pl: { name: 'Polish', flag: '🇵🇱' },
-  pt_br: { name: 'Portuguese (Brazilian)', flag: '🇧🇷' },
-  pt_pt: { name: 'Portuguese (European)', flag: '🇵🇹' },
-  ro: { name: 'Romanian', flag: '🇷🇴' },
-  es: { name: 'Spanish', flag: '🇪🇸' },
-  sv: { name: 'Swedish', flag: '🇸🇪' }
-} as const;
-
-export type TargetLanguage = keyof typeof languages;
+import { languages, TargetLanguage } from '../types/languages';
 
 interface EpubUploaderProps {
   onUpload?: (file: File) => void;

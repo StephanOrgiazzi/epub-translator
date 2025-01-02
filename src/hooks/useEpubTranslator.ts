@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react';
 import JSZip from 'jszip';
 import { DEEPSEEK_API_KEY } from '../config';
-import type { TargetLanguage } from '../components/EpubUploader';
-import { languagePrompts } from '../types/languages';
+import { languagePrompts, TargetLanguage } from '../types/languages';
 
 interface UseEpubTranslatorProps {
   onUpload?: (file: File) => void;
