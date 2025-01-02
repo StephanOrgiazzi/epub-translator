@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEpubTranslator } from '../hooks/useEpubTranslator';
+import { truncateFilename } from '../utils/filename';
 
 export const languages = {
   fr: { name: 'French', flag: '🇫🇷' },
@@ -66,6 +67,7 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ onUpload }) => {
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
+        onClick={() => !isLoading && document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
       >
         <input
           type="file"
@@ -124,17 +126,25 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ onUpload }) => {
       )}
 
       {isLoading && (
-        <div className="mt-4 w-full max-w-xl">
-          <div className="flex justify-between text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            <span>Translating to {languages[targetLanguage].flag} {languages[targetLanguage].name}...</span>
-            <span>{Math.round(translationProgress)}%</span>
+        <div className="mt-6 w-full max-w-xl">
+          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400 text-left">
+            {truncateFilename(selectedFile?.name.replace('.epub', `_${targetLanguage}.epub`) || '', 40)}
+          </p>
+          <div className="mb-2 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+            <span>Translating...</span>
+            <span>{translationProgress}%</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
             <div
-              className="bg-blue-600 dark:bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+              className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-in-out"
               style={{ width: `${translationProgress}%` }}
-            ></div>
+            />
           </div>
+          {translationProgress === 100 && (
+            <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+              Translation complete! File downloaded successfully.
+            </p>
+          )}
         </div>
       )}
 
