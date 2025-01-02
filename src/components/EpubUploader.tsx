@@ -30,7 +30,7 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: init
 
       <div className="w-full max-w-2xl mx-4 relative">
         {/* Background blur circles for visual interest */}
-        <div className="absolute -top-20 -left-20 w-72 h-72 bg-emerald-700 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob"></div>
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-emerald-700 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
         <div className="absolute top-60 -right-20 w-72 h-72 bg-teal-800 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob [animation-delay:2s]"></div>
 
 
@@ -122,7 +122,7 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: init
             {isLoading && (
               <div className="space-y-3">
                 <div className="flex items-center text-white drop-shadow-md">
-                  <span>Translating to {languages[targetLanguage].name} ({translationProgress}%)</span>
+                  <span>Translating to {languages[targetLanguage].name}... ({translationProgress}%)</span>
                 </div>
                 <div className="relative">
                   <div className="relative h-2 bg-white/10 rounded-full overflow-hidden mr-10">
@@ -165,10 +165,10 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: init
             )}
 
             {/* Success Message */}
-            {translationProgress === 100 && (
+            {translationProgress === 100 && !isLoading && (
               <div className="p-4 rounded-lg bg-green-500/20 backdrop-blur-sm border border-green-500/30">
                 <p className="text-green-100 drop-shadow-md">
-                  Translation complete! Downloading EPUB.
+                  Translation complete! EPUB succesfully downloaded.
                 </p>
               </div>
             )}

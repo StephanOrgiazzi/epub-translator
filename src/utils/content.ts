@@ -7,71 +7,108 @@
  */
 // Helper function to split content into chunks while preserving HTML structure
 export const splitContent = (content: string): string[] => {
-  const maxChunkSize = 4000;
+  interface HTMLElement {
+    openTag: string;
+    closeTag: string;
+    content: string;
+  }
+
+  const BLOCK_ELEMENTS = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section'];
+  const MAX_CHUNK_SIZE = 8000;
+
+  /**
+   * Extracts HTML tags and content from an element string
+   */
+  const parseHTMLElement = (element: string): HTMLElement | null => {
+    const openTagMatch = element.match(/<([a-zA-Z0-9]+)[^>]*>/);
+    const closeTagMatch = element.match(/<\/([a-zA-Z0-9]+)>/);
+    
+    if (!openTagMatch || !closeTagMatch) return null;
+    
+    const [openTag] = openTagMatch;
+    const [closeTag] = closeTagMatch;
+    const content = element.slice(openTag.length, -closeTag.length);
+    
+    return { openTag, closeTag, content };
+  };
+
+  /**
+   * Splits text into chunks of specified size
+   */
+  const splitTextIntoChunks = (text: string, maxSize: number): string[] => {
+    return text.match(new RegExp(`.{1,${maxSize}}`, 'g')) || [];
+  };
+
+  /**
+   * Splits HTML element content while preserving tags
+   */
+  const splitHTMLElement = (element: HTMLElement, maxSize: number): string[] => {
+    const { openTag, closeTag, content } = element;
+    const availableSize = maxSize - (openTag.length + closeTag.length);
+    const contentChunks = splitTextIntoChunks(content, availableSize);
+    
+    return contentChunks.map(chunk => `${openTag}${chunk}${closeTag}`);
+  };
+
+  /**
+   * Processes a single element and returns chunks
+   */
+  const processElement = (element: string, currentChunk: string): {
+    chunks: string[];
+    newCurrentChunk: string;
+  } => {
+    const chunks: string[] = [];
+
+    // Handle HTML elements
+    if (element.startsWith('<') && element.endsWith('>')) {
+      if (currentChunk.length + element.length > MAX_CHUNK_SIZE) {
+        if (currentChunk) chunks.push(currentChunk);
+        
+        const htmlElement = parseHTMLElement(element);
+        if (htmlElement) {
+          if (element.length > MAX_CHUNK_SIZE) {
+            chunks.push(...splitHTMLElement(htmlElement, MAX_CHUNK_SIZE));
+            return { chunks, newCurrentChunk: '' };
+          }
+          return { chunks, newCurrentChunk: element };
+        }
+        
+        // Fallback for invalid HTML
+        const subChunks = splitTextIntoChunks(element, MAX_CHUNK_SIZE);
+        chunks.push(...subChunks);
+        return { chunks, newCurrentChunk: '' };
+      }
+      return { chunks, newCurrentChunk: currentChunk + element };
+    }
+
+    // Handle text nodes
+    if (currentChunk.length + element.length > MAX_CHUNK_SIZE) {
+      if (currentChunk) chunks.push(currentChunk);
+      const subChunks = splitTextIntoChunks(element, MAX_CHUNK_SIZE);
+      chunks.push(...subChunks.slice(0, -1));
+      return { chunks, newCurrentChunk: subChunks[subChunks.length - 1] || '' };
+    }
+    
+    return { chunks, newCurrentChunk: currentChunk + element };
+  };
+
+  const blockElementsPattern = `(<(?:${BLOCK_ELEMENTS.join('|')})[^>]*>.*?<\/(?:${BLOCK_ELEMENTS.join('|')})>)`;
+  const elements = content.split(new RegExp(blockElementsPattern, 'gs'));
+  
   const chunks: string[] = [];
   let currentChunk = '';
 
-  // First, find all HTML tags that we want to keep together
-  const elements = content.split(/(<(?:p|div|h[1-6]|section)[^>]*>.*?<\/(?:p|div|h[1-6]|section)>)/gs);
-
   for (const element of elements) {
-    // If it's a complete HTML element
-    if (element.startsWith('<') && element.endsWith('>')) {
-      // If adding this element would exceed maxChunkSize
-      if (currentChunk.length + element.length > maxChunkSize) {
-        // If the current chunk is not empty, push it
-        if (currentChunk) {
-          chunks.push(currentChunk);
-          currentChunk = '';
-        }
-        // If the element itself is larger than maxChunkSize
-        if (element.length > maxChunkSize) {
-          // Split while preserving HTML structure
-          const openTagMatch = element.match(/<([a-zA-Z0-9]+)[^>]*>/);
-          const closeTagMatch = element.match(/<\/([a-zA-Z0-9]+)>/);
-          
-          if (openTagMatch && closeTagMatch) {
-            const [openTag] = openTagMatch;
-            const [closeTag] = closeTagMatch;
-            const innerContent = element.slice(openTag.length, -closeTag.length);
-            
-            // Split content into smaller pieces
-            const contentChunks = innerContent.match(new RegExp(`.{1,${maxChunkSize - openTag.length - closeTag.length}}`, 'g')) || [];
-            
-            // Add tags back to each chunk
-            contentChunks.forEach(chunk => {
-              chunks.push(openTag + chunk + closeTag);
-            });
-          } else {
-            // Fallback: split without preserving structure
-            const subChunks = element.match(new RegExp(`.{1,${maxChunkSize}}`, 'g')) || [];
-            chunks.push(...subChunks);
-          }
-        } else {
-          currentChunk = element;
-        }
-      } else {
-        currentChunk += element;
-      }
-    } else {
-      // For text nodes, split if needed
-      if (currentChunk.length + element.length > maxChunkSize) {
-        if (currentChunk) {
-          chunks.push(currentChunk);
-        }
-        const subChunks = element.match(new RegExp(`.{1,${maxChunkSize}}`, 'g')) || [];
-        chunks.push(...subChunks.slice(0, -1));
-        currentChunk = subChunks[subChunks.length - 1] || '';
-      } else {
-        currentChunk += element;
-      }
-    }
+    const { chunks: newChunks, newCurrentChunk } = processElement(element, currentChunk);
+    chunks.push(...newChunks);
+    currentChunk = newCurrentChunk;
   }
 
   if (currentChunk) {
     chunks.push(currentChunk);
   }
 
+  // Log chunk information
   console.log(`Split content into ${chunks.length} chunks`);
   chunks.forEach((chunk, i) => {
     console.log(`Chunk ${i + 1} size: ${chunk.length} characters`);
