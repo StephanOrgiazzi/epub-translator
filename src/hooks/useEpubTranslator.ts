@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import JSZip from 'jszip';
 import { DEEPSEEK_API_KEY } from '../config';
 import type { TargetLanguage } from '../components/EpubUploader';
@@ -28,9 +28,14 @@ const translateText = async (
   currentChunkIndex: number,
   totalChunks: number,
   targetLanguage: TargetLanguage,
-  updateProgress: (progress: number) => void
+  updateProgress: (progress: number) => void,
+  isCancelled: React.RefObject<boolean>
 ): Promise<string> => {
   try {
+    if (isCancelled.current) {
+      return '';
+    }
+
     console.log(`Translating chunk ${currentChunkIndex + 1}/${totalChunks} of file ${currentFileIndex + 1}/${totalFiles}`);
     console.log(`Chunk size: ${content.length} characters`);
 
@@ -84,6 +89,11 @@ const translateText = async (
 
     try {
       while (true) {
+        if (isCancelled.current) {
+          reader.cancel();
+          return '';
+        }
+
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -158,17 +168,31 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
   const [dragActive, setDragActive] = useState(false);
   const [translationProgress, setTranslationProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const isCancelled = useRef(false);
 
-  // Ensure progress never decreases
+  // Ensure progress never decreases during translation
   const updateProgress = (newProgress: number) => {
-    setTranslationProgress(prev => Math.max(prev, Math.round(newProgress)));
+    if (!isCancelled.current) {
+      setTranslationProgress(prev => Math.max(prev, Math.round(newProgress)));
+    }
+  };
+
+  const handleCancel = () => {
+    isCancelled.current = true;
+    setShowCancelModal(false);
+    setIsLoading(false);
+    setSelectedFile(null);
+    setTranslationProgress(0);
+    setError(null);
   };
 
   const processEpubFile = async (file: File) => {
     try {
+      isCancelled.current = false;
       setIsLoading(true);
       setError(null);
-      updateProgress(0);
+      setTranslationProgress(0);
       
       const zip = new JSZip();
       const epubContent = await file.arrayBuffer();
@@ -181,6 +205,8 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
       
       // Process files in sequence, but chunks in parallel
       for (let fileIndex = 0; fileIndex < htmlFiles.length; fileIndex++) {
+        if (isCancelled.current) break;
+
         const filename = htmlFiles[fileIndex];
         const fileContent = await epubZip.file(filename)?.async('string');
         
@@ -193,6 +219,8 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
           let translatedContent = '';
           
           for (let i = 0; i < chunks.length; i += CONCURRENT_CHUNKS) {
+            if (isCancelled.current) break;
+
             const chunkGroup = chunks.slice(i, i + CONCURRENT_CHUNKS);
             const translations = await Promise.all(
               chunkGroup.map((chunk, groupIndex) => 
@@ -203,7 +231,8 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
                   i + groupIndex,
                   chunks.length,
                   targetLanguage,
-                  updateProgress
+                  updateProgress,
+                  isCancelled
                 )
               )
             );
@@ -214,23 +243,25 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
           zip.file(filename, translatedContent);
         }
       }
-      
-      // Generate the translated EPUB
-      const translatedEpub = await zip.generateAsync({ type: 'blob' });
-      
-      // Create a download link
-      const downloadUrl = URL.createObjectURL(translatedEpub);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = downloadUrl;
-      downloadLink.download = file.name.replace('.epub', `_${targetLanguage}.epub`);
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      URL.revokeObjectURL(downloadUrl);
-      
-      updateProgress(100);
-      setIsLoading(false);
-      setSelectedFile(null);
+
+      if (!isCancelled.current) {
+        // Generate the translated EPUB
+        const translatedEpub = await zip.generateAsync({ type: 'blob' });
+        
+        // Create a download link
+        const downloadUrl = URL.createObjectURL(translatedEpub);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadUrl;
+        downloadLink.download = file.name.replace('.epub', `_${targetLanguage}.epub`);
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(downloadUrl);
+        
+        updateProgress(100);
+        setIsLoading(false);
+        setSelectedFile(null);
+      }
     } catch (err: any) {
       console.error('Error processing EPUB:', err);
       setError(err.message);
@@ -259,6 +290,7 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
         onUpload?.(file);
         setSelectedFile(file);
         setError(null);
+        setTranslationProgress(0);
       } else {
         setError('Please upload an EPUB file');
       }
@@ -273,6 +305,7 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
         onUpload?.(file);
         setSelectedFile(file);
         setError(null);
+        setTranslationProgress(0);
       } else {
         setError('Please upload an EPUB file');
       }
@@ -295,6 +328,9 @@ export const useEpubTranslator = ({ onUpload, targetLanguage }: UseEpubTranslato
     handleDrop,
     handleChange,
     startTranslation,
+    handleCancel,
+    showCancelModal,
+    setShowCancelModal,
   };
 };
 

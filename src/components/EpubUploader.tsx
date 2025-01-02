@@ -23,7 +23,7 @@ interface EpubUploaderProps {
 
 export const EpubUploader: React.FC<EpubUploaderProps> = ({ onUpload }) => {
   const [targetLanguage, setTargetLanguage] = React.useState<TargetLanguage>('fr');
-  
+
   const {
     isLoading,
     error,
@@ -34,7 +34,15 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ onUpload }) => {
     handleDrop,
     handleChange,
     startTranslation,
+    handleCancel,
+    showCancelModal,
+    setShowCancelModal,
   } = useEpubTranslator({ onUpload, targetLanguage });
+
+  const handleCancelClick = () => {
+    handleCancel();
+    setShowCancelModal(false);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-[400px] p-4">
@@ -132,7 +140,18 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ onUpload }) => {
           </p>
           <div className="mb-2 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>Translating...</span>
-            <span>{translationProgress}%</span>
+            <div className="flex items-center space-x-2">
+              <span>{translationProgress}%</span>
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                aria-label="Cancel translation"
+              >
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
             <div
@@ -145,6 +164,33 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ onUpload }) => {
               Translation complete! File downloaded successfully.
             </p>
           )}
+        </div>
+      )}
+
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              Cancel Translation?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Are you sure you want to cancel the translation? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-md transition-colors"
+              >
+                No, continue
+              </button>
+              <button
+                onClick={handleCancelClick}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+              >
+                Yes, cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
