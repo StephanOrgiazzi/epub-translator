@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light mode colors */
+  --mesh-color-1: #4f46e5;  /* Indigo */
+  --mesh-color-2: #7c3aed;  /* Purple */
+  --mesh-color-3: #2563eb;  /* Blue */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root.dark {
+  /* Dark mode colors - brighter and more saturated */
+  --mesh-color-1: #6366f1;  /* Brighter Indigo */
+  --mesh-color-2: #8b5cf6;  /* Brighter Purple */
+  --mesh-color-3: #3b82f6;  /* Brighter Blue */
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12) 0%, rgba(3, 3, 3, 1) 70%);
+  background-color: rgb(3, 3, 3);
+  color: #ffffff;
+}
+
+/* Dark mode handled by Tailwind's dark: classes */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
