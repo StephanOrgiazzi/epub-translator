@@ -3,6 +3,8 @@ import { useEpubTranslator } from '../hooks/useEpubTranslator';
 import { truncateFilename } from '../utils/filename';
 
 export const languages = {
+  en: { name: 'English (UK)', flag: '🇬🇧' },
+  en_us: { name: 'English (US)', flag: '🇺🇸' },
   fr: { name: 'French', flag: '🇫🇷' },
   nl: { name: 'Dutch', flag: '🇳🇱' },
   de: { name: 'German', flag: '🇩🇪' },

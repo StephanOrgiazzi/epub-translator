@@ -2,24 +2,12 @@ import { useState, useRef } from 'react';
 import JSZip from 'jszip';
 import { DEEPSEEK_API_KEY } from '../config';
 import type { TargetLanguage } from '../components/EpubUploader';
+import { languagePrompts } from '../types/languages';
 
 interface UseEpubTranslatorProps {
   onUpload?: (file: File) => void;
   targetLanguage: TargetLanguage;
 }
-
-const languagePrompts = {
-  nl: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Dutch, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  fr: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to French, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  de: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to German, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  it: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Italian, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  pl: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Polish, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  pt_pt: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to European Portuguese, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  pt_br: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Brazilian Portuguese, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text. Use Brazilian Portuguese vocabulary and expressions.',
-  ro: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Romanian, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  sv: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Swedish, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-  es: 'You are a professional translator with expertise in accurate and context-aware translations. Translate the following English text to Spanish, maintaining the original HTML formatting and paragraph structure. Preserve all HTML tags exactly as they appear. Ensure the translation is accurate, fluent, and culturally appropriate, reflecting the intended meaning of the original text.',
-};
 
 const translateText = async (
   content: string,
