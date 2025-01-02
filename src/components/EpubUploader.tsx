@@ -26,7 +26,7 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: init
   } = useEpubTranslator({ targetLanguage });
 
   return (
-    <div className="min-h-screen h-screen bg-gradient-to-b from-teal-950 via-black-950 to-black-950 flex items-center justify-center overflow-hidden blur-[0px]">
+    <div className="h-full bg-gradient-to-b from-teal-950 via-black-950 to-black-950 flex items-center justify-center overflow-hidden">
 
       <div className="w-full max-w-2xl mx-4 relative">
         {/* Background blur circles for visual interest */}

@@ -13,8 +13,17 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
+html, body {
+  @apply h-full overflow-hidden;
   margin: 0;
+  padding: 0;
+}
+
+#root {
+  @apply h-full;
+}
+
+body {
   min-height: 100vh;
   background-color: rgb(3, 3, 3);
   color: #ffffff;
