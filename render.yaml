@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: epub-translator
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_DEEPSEEK_API_KEY
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
