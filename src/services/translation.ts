@@ -43,7 +43,9 @@ export const translateText = async (
             content
           }
         ],
-        stream: true
+        stream: true,
+        temperature: 1.3,
+        max_tokens: 8192
       })
     });
 
