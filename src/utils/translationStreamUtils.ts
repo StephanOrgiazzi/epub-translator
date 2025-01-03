@@ -205,8 +205,8 @@ export const processStreamBuffer = async (
   }
 };
 
-export const validateTranslation = (translatedText: string, isCancelled?: { current: boolean }): void => {
-  if (!translatedText.trim() && (!isCancelled || !isCancelled.current)) {
-    throw new Error('Empty translation received');
+export const validateTranslation = (translatedText: string, isCancelled?: RefObject<boolean>): void => {
+  if (!translatedText || (isCancelled?.current && translatedText.length === 0)) {
+    throw new Error('Translation failed or was cancelled');
   }
 };
