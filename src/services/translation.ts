@@ -23,7 +23,7 @@ export const translateText = async (
     const baseProgress = ((currentFileIndex * totalChunks + currentChunkIndex) / (totalFiles * totalChunks)) * 100;
     const nextChunkProgress = ((currentFileIndex * totalChunks + currentChunkIndex + 1) / (totalFiles * totalChunks)) * 100;
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/beta/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,24 +39,30 @@ export const translateText = async (
           },
           {
             role: 'user',
-            content
+            content: content
+          },
+          {
+            role: 'assistant',
+            content: '',
+            prefix: true
           }
         ],
         stream: true,
         temperature: 1.3,
-        max_tokens: 8192
+        max_tokens: 8192,
+        stop: null
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Translation failed: ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    if (!response.body) {
-      throw new Error('Response body is null');
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No reader available');
     }
 
-    const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
     let finalTranslation = '';
     let processedChars = 0;
@@ -114,7 +120,7 @@ export const translateText = async (
           }
         }
       }
-      
+
       // Process any remaining data in the buffer
       if (buffer.trim()) {
         const trimmedLine = buffer.trim();

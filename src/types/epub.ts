@@ -17,3 +17,9 @@ export interface TranslationError extends Error {
   statusCode?: number;
   statusText?: string;
 }
+
+export interface HTMLElement {
+  openTag: string;
+  closeTag: string;
+  content: string;
+}

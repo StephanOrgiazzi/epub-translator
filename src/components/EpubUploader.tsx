@@ -2,18 +2,11 @@ import React, { useState } from 'react';
 import { useEpubTranslator } from '../hooks/useEpubTranslator';
 import { languages, TargetLanguage } from '../types/languages';
 import { CancelModal } from './CancelModal';
+import { truncateFilename } from '../utils/utils';
 
 interface EpubUploaderProps {
   targetLanguage?: TargetLanguage;
 }
-
-const truncateFilename = (filename: string, maxLength: number = 30) => {
-  if (filename.length <= maxLength) return filename;
-  const extension = filename.split('.').pop();
-  const nameWithoutExt = filename.slice(0, filename.lastIndexOf('.'));
-  const truncatedName = nameWithoutExt.slice(0, maxLength - 3 - (extension?.length || 0));
-  return `${truncatedName}...${extension}`;
-};
 
 export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: initialLanguage = 'fr' }) => {
   const [targetLanguage, setTargetLanguage] = useState<TargetLanguage>(initialLanguage);

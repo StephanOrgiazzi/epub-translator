@@ -1,3 +1,5 @@
+import { HTMLElement } from '../types/epub';
+
 /**
  * Splits HTML content into chunks while preserving HTML structure.
  * Each chunk will be approximately MAX_CHUNK_SIZE characters or less.
@@ -5,16 +7,12 @@
  * @param content - The HTML content to split
  * @returns An array of content chunks
  */
+
+
 // Helper function to split content into chunks while preserving HTML structure
 export const splitContent = (content: string): string[] => {
-  interface HTMLElement {
-    openTag: string;
-    closeTag: string;
-    content: string;
-  }
-
   const BLOCK_ELEMENTS = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section'];
-  const MAX_CHUNK_SIZE = 8000;
+  const MAX_CHUNK_SIZE = 10000;
 
   /**
    * Extracts HTML tags and content from an element string
