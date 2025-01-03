@@ -1,0 +1,17 @@
+{
+  "name": "EPUB Translator",
+  "short_name": "EPUB Trans",
+  "description": "Free online EPUB translator that preserves formatting. Instantly translate your eBooks to 95+ languages.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#115e59",
+  "icons": [
+    {
+      "src": "/epub-translator.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
