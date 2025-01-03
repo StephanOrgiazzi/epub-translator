@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://epub-translator.onrender.com/sitemap.xml

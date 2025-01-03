@@ -1,20 +1,29 @@
 # EPUB Translator
 
-A modern web application that translates EPUB books into different languages using the DeepSeek AI model. Built with React, TypeScript, and Vite.
+A modern web application that translates EPUB books while preserving their formatting. Built with Next.js 14, TypeScript, and Tailwind CSS.
 
 🌐 **[Try it live: epub-translator.onrender.com](https://epub-translator.onrender.com/)**
 
+![EPUB Translator Screenshot](screenshot.png)
+
 ## Features
 
-- 🚀 Fast and efficient EPUB translation
-- 🎯 Support for multiple languages
-- 📚 Preserves EPUB formatting and structure
-- 💫 Beautiful, modern UI with glassmorphism effects
+- 🌍 Translate EPUB books to 95+ languages
+- 🎨 Preserves original EPUB formatting and structure
+- 💨 Fast translation with concurrent processing
 - 🔄 Real-time translation progress tracking
-- ⚡ Parallel chunk processing for faster translation
-- 📱 Responsive design for all devices
+- 📱 Responsive design with modern UI
+- 🎯 Drag and drop file upload
+- 🔒 Client-side processing for privacy
 
-![EPUB Translator Screenshot](screenshot.png)
+## Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) with App Router
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Translation**: DeepSeek API
+- **EPUB Processing**: JSZip
+- **Deployment**: Render
 
 ## Getting Started
 
@@ -37,102 +46,62 @@ cd epub-translator
 npm install
 ```
 
-3. Create a `.env` file in the root directory and add your DeepSeek API key:
+3. Create a `.env.local` file in the root directory and add your DeepSeek API key:
 ```env
-VITE_DEEPSEEK_API_KEY=your_api_key_here
+NEXT_PUBLIC_DEEPSEEK_API_KEY=your_api_key_here
 ```
 
-4. Start the development server:
+4. Run the development server:
 ```bash
 npm run dev
 ```
 
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
 ## Project Structure
 
 ```
-src/
-├── components/          # React components
-│   ├── EpubUploader.tsx
-│   └── CancelModal.tsx
-├── hooks/              # Custom React hooks
-│   └── useEpubTranslator.ts
-├── services/           # External services integration
-│   └── translation.ts  # DeepSeek API integration
-├── types/             # TypeScript type definitions
-│   ├── languages.ts
-│   └── epub.ts
-└── utils/             # Utility functions
-    ├── fileUtils.ts          # File handling utilities
-    ├── splitContent.ts       # Content splitting logic
-    ├── translationQueue.ts   # Translation queue management
-    ├── translationProcessor.ts # Translation processing logic
-    └── translationStreamUtils.ts # Stream processing utilities
+epub-translator/
+├── src/
+│   ├── app/                # Next.js app router files
+│   ├── components/         # React components
+│   │   ├── EpubUploader.tsx
+│   │   ├── LanguageSelector.tsx
+│   │   ├── UploadArea.tsx
+│   │   ├── TranslationProgress.tsx
+│   │   ├── SuccessMessage.tsx
+│   │   └── CancelModal.tsx
+│   ├── hooks/             # Custom React hooks
+│   ├── services/          # External services integration
+│   ├── types/             # TypeScript type definitions
+│   └── utils/             # Utility functions
+├── public/                # Static files
+├── tailwind.config.js     # Tailwind CSS configuration
+└── next.config.js         # Next.js configuration
 ```
 
-## Usage
+## Development
 
-### Translation Process
+- Run development server: `npm run dev`
+- Build for production: `npm run build`
+- Start production server: `npm start`
+- Lint code: `npm run lint`
 
-1. Upload an EPUB file by dragging and dropping or clicking the upload area
-2. Select your target language from the dropdown
-3. Click "Translate" to start the translation process
-4. The system will:
-   - Extract and parse EPUB content
-   - Split content into optimal chunks
-   - Process chunks concurrently with rate limiting
-   - Stream translations in real-time
-   - Show accurate progress with streaming updates
-   - Generate and download the translated EPUB
-5. Monitor the progress bar for translation status
-6. Once complete, the translated EPUB will automatically download
+## Contributing
 
-## Technical Details
-
-### Built With
-- React 18
-- TypeScript
-- Vite
-- TailwindCSS
-- DeepSeek AI API
-
-### Key Components
-
-- **EpubUploader**: Main component for handling file uploads and displaying translation progress
-- **useEpubTranslator**: Core hook managing the translation process
-- **Translation Service**: 
-  - `translation.ts`: Handles DeepSeek API integration
-  - `translationStreamUtils.ts`: Manages streaming response processing
-- **Translation Utilities**:
-  - `fileUtils.ts`: Handles file operations (download, name truncation)
-  - `splitContent.ts`: Splits EPUB content into manageable chunks
-  - `translationQueue.ts`: Manages concurrent translation requests
-  - `translationProcessor.ts`: Orchestrates the translation process
-  - `translationStreamUtils.ts`: Processes streaming API responses
-
-### Technical Implementation
-
-- **Concurrent Processing**: 
-  - Processes multiple files simultaneously
-  - Handles multiple chunks per file concurrently
-  - Rate limits API requests to prevent overload
-
-- **Stream Processing**:
-  - Real-time translation streaming
-  - Efficient buffer management
-  - Progress tracking per character
-  - Memory-efficient processing
-
-- **Error Handling**:
-  - Graceful error recovery
-  - Detailed error reporting
-  - Translation validation
-  - Cancellation support
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin feature/my-new-feature`
+5. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
 
-- DeepSeek for their powerful translation API
-- The React and Vite communities
+- [Next.js](https://nextjs.org/) for the amazing React framework
+- [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
+- [DeepSeek](https://deepseek.com/) for the translation API
+- [JSZip](https://stuk.github.io/jszip/) for EPUB processing

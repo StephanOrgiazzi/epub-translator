@@ -19,7 +19,7 @@ const createTranslationRequest = (content: string, targetLanguage: TargetLanguag
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'text/event-stream',
-    'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
+    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY}`,
   },
   body: JSON.stringify({
     model: MODEL_NAME,
@@ -78,7 +78,10 @@ export const translateText = async (
     const translatedText = await processStreamBuffer(reader, context, progress);
     
     updateProgress(progress.nextChunkProgress);
-    validateTranslation(translatedText);
+    // Only validate if not cancelled
+    if (!isCancelled.current) {
+      validateTranslation(translatedText, isCancelled);
+    }
     
     return translatedText;
   } catch (error) {

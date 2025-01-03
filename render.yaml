@@ -1,13 +1,14 @@
 services:
   - type: web
     name: epub-translator
-    env: static
+    env: node
+    plan: free
     buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
+    startCommand: npm run start
     envVars:
-      - key: VITE_DEEPSEEK_API_KEY
+      - key: NEXT_PUBLIC_DEEPSEEK_API_KEY
         sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
+    autoDeploy: true
