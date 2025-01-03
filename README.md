@@ -2,7 +2,7 @@
 
 A modern web application that translates EPUB books while preserving their formatting. Built with Next.js 14, TypeScript, and Tailwind CSS.
 
-🌐 **[Try it live: epub-translator.onrender.com](https://epub-translator.onrender.com/)**
+🌐 **[Try it live: epub-translator-yc1l.onrender.com](https://epub-translator-yc1l.onrender.com/)**
 
 ![EPUB Translator Screenshot](screenshot.png)
 
@@ -29,8 +29,8 @@ A modern web application that translates EPUB books while preserving their forma
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn
+- Node.js (v20.9.0 or higher)
+- yarn
 - DeepSeek API key
 
 ### Installation
@@ -43,7 +43,7 @@ cd epub-translator
 
 2. Install dependencies:
 ```bash
-npm install
+yarn
 ```
 
 3. Create a `.env.local` file in the root directory and add your DeepSeek API key:
@@ -53,7 +53,7 @@ NEXT_PUBLIC_DEEPSEEK_API_KEY=your_api_key_here
 
 4. Run the development server:
 ```bash
-npm run dev
+yarn dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -82,18 +82,11 @@ epub-translator/
 
 ## Development
 
-- Run development server: `npm run dev`
-- Build for production: `npm run build`
-- Start production server: `npm start`
-- Lint code: `npm run lint`
+- Run development server: `yarn dev`
+- Build for production: `yarn build`
+- Start production server: `yarn start`
+- Lint code: `yarn lint`
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature/my-new-feature`
-5. Submit a pull request
 
 ## License
 
@@ -105,3 +98,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
 - [DeepSeek](https://deepseek.com/) for the translation API
 - [JSZip](https://stuk.github.io/jszip/) for EPUB processing
+- [Render](https://render.com/) for deployment
