@@ -10,5 +10,16 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 18.17.0
     healthCheckPath: /
     autoDeploy: true
+    buildFilter:
+      paths:
+        - src/**
+        - public/**
+        - package.json
+        - next.config.js
+        - tsconfig.json
+        - postcss.config.js
+        - tailwind.config.js
