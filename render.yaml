@@ -3,7 +3,7 @@ services:
     name: epub-translator
     env: node
     plan: free
-    buildCommand: yarn && yarn build
+    buildCommand: yarn install --production=false && yarn build
     startCommand: yarn start
     envVars:
       - key: NEXT_PUBLIC_DEEPSEEK_API_KEY
