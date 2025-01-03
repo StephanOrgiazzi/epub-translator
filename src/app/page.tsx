@@ -2,9 +2,13 @@
 
 import dynamic from 'next/dynamic'
 
-// Dynamically import EpubUploader with no SSR
 const EpubUploader = dynamic(() => import('../components/EpubUploader'), {
   ssr: false,
+  loading: () => (
+    <div className="text-white text-center">
+      Loading translator...
+    </div>
+  ),
 })
 
 export default function Home() {

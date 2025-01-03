@@ -3,8 +3,8 @@ services:
     name: epub-translator
     env: node
     plan: free
-    buildCommand: npm cache clean --force && rm -rf .next && npm install && npm run build
-    startCommand: npm run start
+    buildCommand: yarn && yarn build
+    startCommand: yarn start
     envVars:
       - key: NEXT_PUBLIC_DEEPSEEK_API_KEY
         sync: false
