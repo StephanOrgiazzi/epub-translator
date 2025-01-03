@@ -4,11 +4,6 @@ import dynamic from 'next/dynamic'
 
 const EpubUploader = dynamic(() => import('../components/EpubUploader'), {
   ssr: false,
-  loading: () => (
-    <div className="text-white text-center">
-      Loading translator...
-    </div>
-  ),
 })
 
 export default function Home() {

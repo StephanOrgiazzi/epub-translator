@@ -8,8 +8,9 @@ export const metadata: Metadata = {
   title: 'EPUB Translator',
   description: 'Free online EPUB translator that preserves formatting',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png'
+    icon: '/epub-translator.svg',
+    shortcut: '/epub-translator.svg',
+    apple: '/epub-translator.svg',
   }
 }
 
