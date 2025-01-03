@@ -7,6 +7,14 @@ interface EpubUploaderProps {
   targetLanguage?: TargetLanguage;
 }
 
+const truncateFilename = (filename: string, maxLength: number = 30) => {
+  if (filename.length <= maxLength) return filename;
+  const extension = filename.split('.').pop();
+  const nameWithoutExt = filename.slice(0, filename.lastIndexOf('.'));
+  const truncatedName = nameWithoutExt.slice(0, maxLength - 3 - (extension?.length || 0));
+  return `${truncatedName}...${extension}`;
+};
+
 export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: initialLanguage = 'fr' }) => {
   const [targetLanguage, setTargetLanguage] = useState<TargetLanguage>(initialLanguage);
   
@@ -103,7 +111,7 @@ export const EpubUploader: React.FC<EpubUploaderProps> = ({ targetLanguage: init
                 </div>
                 <div className="space-y-2">
                   <p className="text-lg font-medium text-white drop-shadow-md">
-                    {selectedFile ? selectedFile.name : 'Drop your EPUB file here'}
+                    {selectedFile ? truncateFilename(selectedFile.name) : 'Drop your EPUB file here'}
                   </p>
                   <p className="text-sm text-white/70 drop-shadow-sm">
                     or click to select a file
