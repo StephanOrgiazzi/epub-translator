@@ -55,40 +55,36 @@ export const translateFile = async (
   queue: ReturnType<typeof createTranslationQueue>,
   targetLanguage: TargetLanguage,
   translationCache: Map<string, string>,
-  updateProgress: (progress: number) => void,
+  translationProgress: (progress: number) => void,
   isCancelled: { current: boolean }
 ) => {
   const CONCURRENT_CHUNKS = 5;
   const chunks = splitContent(fileContent);
-  
-  const chunkGroups = Array.from(
-    { length: Math.ceil(chunks.length / CONCURRENT_CHUNKS) },
-    (_, i) => chunks.slice(i * CONCURRENT_CHUNKS, (i + 1) * CONCURRENT_CHUNKS)
-  );
 
   let translatedContent = '';
-  for (const [groupIndex, group] of chunkGroups.entries()) {
-    if (isCancelled.current) break;
-    
-    const startIndex = groupIndex * CONCURRENT_CHUNKS;
-    // Process chunks in parallel within the group
-    const translations = await Promise.all(
-      group.map((chunk, index) =>
-        translateChunk(
-          chunk,
-          fileIndex,
-          totalFiles,
-          startIndex + index,
-          chunks.length,
-          queue,
-          targetLanguage,
-          translationCache,
-          updateProgress,
-          isCancelled
+  for (const [index] of chunks.entries()) {
+    if (index % CONCURRENT_CHUNKS === 0) {
+      if (isCancelled.current) break;
+
+      const chunkGroup = chunks.slice(index, index + CONCURRENT_CHUNKS);
+      const translations = await Promise.all(
+        chunkGroup.map((chunk, groupIndex) =>
+          translateChunk(
+            chunk,
+            fileIndex,
+            totalFiles,
+            index + groupIndex,
+            chunks.length,
+            queue,
+            targetLanguage,
+            translationCache,
+            translationProgress,
+            isCancelled
+          )
         )
-      )
-    );
-    translatedContent += translations.join('');
+      );
+      translatedContent += translations.join('');
+    }
   }
   
   return translatedContent;
@@ -122,29 +118,32 @@ export const processEpubFile = async (
     
     // Process files concurrently in groups
     const FILE_CONCURRENCY = 2;
-    for (let i = 0; i < htmlFiles.length; i += FILE_CONCURRENCY) {
-      if (isCancelled.current) break;
+    
+    for (const [index] of htmlFiles.entries()) {
+      if (index % FILE_CONCURRENCY === 0) {
+        if (isCancelled.current) break;
 
-      const fileGroup = htmlFiles.slice(i, i + FILE_CONCURRENCY);
-      const filePromises = fileGroup.map(async (filename, groupIndex) => {
-        const fileContent = await epubZip.file(filename)?.async('string');
-        if (!fileContent) return;
+        const fileGroup = htmlFiles.slice(index, index + FILE_CONCURRENCY);
+        const filePromises = fileGroup.map(async (filename, groupIndex) => {
+          const fileContent = await epubZip.file(filename)?.async('string');
+          if (!fileContent) return;
 
-        const translatedContent = await translateFile(
-          fileContent,
-          i + groupIndex,
-          htmlFiles.length,
-          queue,
-          targetLanguage,
-          translationCache,
-          translationProgress,
-          isCancelled
-        );
-        
-        zip.file(filename, translatedContent);
-      });
+          const translatedContent = await translateFile(
+            fileContent,
+            index + groupIndex,
+            htmlFiles.length,
+            queue,
+            targetLanguage,
+            translationCache,
+            translationProgress,
+            isCancelled
+          );
+          
+          zip.file(filename, translatedContent);
+        });
 
-      await Promise.all(filePromises);
+        await Promise.all(filePromises);
+      }
     }
 
     if (!isCancelled.current) {

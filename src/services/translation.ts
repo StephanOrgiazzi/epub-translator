@@ -48,7 +48,7 @@ export const translateText = async (
           }
         ],
         stream: true,
-        temperature: 1.3,
+        temperature: 1.1,
         max_tokens: 8192,
         stop: null
       })
