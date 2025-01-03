@@ -2,7 +2,7 @@
 
 A modern web application that translates EPUB books into different languages using the DeepSeek AI model. Built with React, TypeScript, and Vite.
 
-🌐 **[Try it live!](https://epub-translator.onrender.com/)**
+🌐 **[Try it live: epub-translator.onrender.com](https://epub-translator.onrender.com/)**
 
 ## Features
 
