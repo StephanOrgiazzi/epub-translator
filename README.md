@@ -65,22 +65,26 @@ src/
     ├── fileUtils.ts          # File handling utilities
     ├── splitContent.ts       # Content splitting logic
     ├── translationQueue.ts   # Translation queue management
-    └── translationProcessor.ts # Translation processing logic
+    ├── translationProcessor.ts # Translation processing logic
+    └── translationStreamUtils.ts # Stream processing utilities
 ```
 
 ## Usage
 
+### Translation Process
+
 1. Upload an EPUB file by dragging and dropping or clicking the upload area
 2. Select your target language from the dropdown
 3. Click "Translate" to start the translation process
-4. Monitor the progress bar for translation status
-5. Once complete, the translated EPUB will automatically download
-
-The translation process:
-- Splits content into optimal chunks
-- Processes multiple chunks concurrently
-- Caches translations to avoid duplicate work
-- Preserves EPUB structure and formatting
+4. The system will:
+   - Extract and parse EPUB content
+   - Split content into optimal chunks
+   - Process chunks concurrently with rate limiting
+   - Stream translations in real-time
+   - Show accurate progress with streaming updates
+   - Generate and download the translated EPUB
+5. Monitor the progress bar for translation status
+6. Once complete, the translated EPUB will automatically download
 
 ## Technical Details
 
@@ -95,11 +99,34 @@ The translation process:
 
 - **EpubUploader**: Main component for handling file uploads and displaying translation progress
 - **useEpubTranslator**: Core hook managing the translation process
+- **Translation Service**: 
+  - `translation.ts`: Handles DeepSeek API integration
+  - `translationStreamUtils.ts`: Manages streaming response processing
 - **Translation Utilities**:
   - `fileUtils.ts`: Handles file operations (download, name truncation)
   - `splitContent.ts`: Splits EPUB content into manageable chunks
   - `translationQueue.ts`: Manages concurrent translation requests
   - `translationProcessor.ts`: Orchestrates the translation process
+  - `translationStreamUtils.ts`: Processes streaming API responses
+
+### Technical Implementation
+
+- **Concurrent Processing**: 
+  - Processes multiple files simultaneously
+  - Handles multiple chunks per file concurrently
+  - Rate limits API requests to prevent overload
+
+- **Stream Processing**:
+  - Real-time translation streaming
+  - Efficient buffer management
+  - Progress tracking per character
+  - Memory-efficient processing
+
+- **Error Handling**:
+  - Graceful error recovery
+  - Detailed error reporting
+  - Translation validation
+  - Cancellation support
 
 ## License
 

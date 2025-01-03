@@ -1,5 +1,49 @@
 import { languagePrompts, TargetLanguage } from '../types/languages';
 import { RefObject } from 'react';
+import {
+  TranslationContext,
+  calculateTranslationProgress,
+  initializeStreamReader,
+  logTranslationStart,
+  processStreamBuffer,
+  validateTranslation
+} from '../utils/translationStreamUtils';
+
+const API_ENDPOINT = 'https://api.deepseek.com/beta/chat/completions';
+const MODEL_NAME = 'deepseek-chat';
+const TEMPERATURE = 1.1;
+const MAX_TOKENS = 8192;
+
+const createTranslationRequest = (content: string, targetLanguage: TargetLanguage): RequestInit => ({
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+    'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: MODEL_NAME,
+    messages: [
+      {
+        role: 'system',
+        content: languagePrompts[targetLanguage]
+      },
+      {
+        role: 'user',
+        content: content
+      },
+      {
+        role: 'assistant',
+        content: '',
+        prefix: true
+      }
+    ],
+    stream: true,
+    temperature: TEMPERATURE,
+    max_tokens: MAX_TOKENS,
+    stop: null
+  })
+});
 
 export const translateText = async (
   content: string,
@@ -11,148 +55,34 @@ export const translateText = async (
   updateProgress: (progress: number) => void,
   isCancelled: RefObject<boolean>
 ): Promise<string> => {
+  if (isCancelled.current) return '';
+
+  const context: TranslationContext = {
+    content,
+    totalChars: content.length,
+    currentFileIndex,
+    totalFiles,
+    currentChunkIndex,
+    totalChunks,
+    targetLanguage,
+    updateProgress,
+    isCancelled
+  };
+
+  logTranslationStart(context);
+  const progress = calculateTranslationProgress(currentFileIndex, totalFiles, currentChunkIndex, totalChunks);
+
   try {
-    if (isCancelled.current) {
-      return '';
-    }
-
-    console.log(`Translating chunk ${currentChunkIndex + 1}/${totalChunks} of file ${currentFileIndex + 1}/${totalFiles}`);
-    console.log(`Chunk size: ${content.length} characters`);
-
-    // Calculate base progress for this chunk
-    const baseProgress = ((currentFileIndex * totalChunks + currentChunkIndex) / (totalFiles * totalChunks)) * 100;
-    const nextChunkProgress = ((currentFileIndex * totalChunks + currentChunkIndex + 1) / (totalFiles * totalChunks)) * 100;
-
-    const response = await fetch('https://api.deepseek.com/beta/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: languagePrompts[targetLanguage]
-          },
-          {
-            role: 'user',
-            content: content
-          },
-          {
-            role: 'assistant',
-            content: '',
-            prefix: true
-          }
-        ],
-        stream: true,
-        temperature: 1.1,
-        max_tokens: 8192,
-        stop: null
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No reader available');
-    }
-
-    const decoder = new TextDecoder('utf-8');
-    let finalTranslation = '';
-    let processedChars = 0;
-    let totalChars = content.length;
-    let buffer = '';
-
-    // Calculate progress boundaries for this chunk
-    const chunkProgressRange = nextChunkProgress - baseProgress;
-
-    // Start at the base progress
-    updateProgress(baseProgress);
-
-    try {
-      while (true) {
-        if (isCancelled.current) {
-          reader.cancel();
-          return '';
-        }
-
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        // Append new chunk to buffer and split into lines
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        
-        // Keep the last line in buffer if it's incomplete
-        buffer = lines.pop() || '';
-        
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (!trimmedLine || trimmedLine === 'data: [DONE]') continue;
-          
-          if (trimmedLine.startsWith('data: ')) {
-            try {
-              const data = trimmedLine.slice(5).trim();
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                finalTranslation += content;
-                processedChars += content.length;
-
-                // Update progress based on characters processed
-                const progressInChunk = Math.min(0.95, processedChars / totalChars);
-                const currentProgress = baseProgress + (progressInChunk * chunkProgressRange);
-                updateProgress(currentProgress);
-              }
-            } catch (e) {
-              // Only log parsing errors for non-empty data
-              if (trimmedLine !== 'data: ') {
-                console.error('Error parsing chunk:', e);
-                console.debug('Problematic chunk:', trimmedLine);
-              }
-            }
-          }
-        }
-      }
-
-      // Process any remaining data in the buffer
-      if (buffer.trim()) {
-        const trimmedLine = buffer.trim();
-        if (trimmedLine.startsWith('data: ') && trimmedLine !== 'data: [DONE]') {
-          try {
-            const data = trimmedLine.slice(5).trim();
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              finalTranslation += content;
-            }
-          } catch (e) {
-            console.error('Error parsing final chunk:', e);
-            console.debug('Problematic final chunk:', trimmedLine);
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
-
-    // When chunk is complete, set to exact next chunk progress
-    updateProgress(nextChunkProgress);
-
-    // Ensure we have a complete translation
-    if (!finalTranslation.trim()) {
-      throw new Error('Empty translation received');
-    }
-
-    return finalTranslation;
-  } catch (error: any) {
+    const response = await fetch(API_ENDPOINT, createTranslationRequest(content, targetLanguage));
+    const reader = await initializeStreamReader(response);
+    const translatedText = await processStreamBuffer(reader, context, progress);
+    
+    updateProgress(progress.nextChunkProgress);
+    validateTranslation(translatedText);
+    
+    return translatedText;
+  } catch (error) {
     console.error('Translation error:', error);
-    throw new Error(`Translation failed: ${error.message}`);
+    throw error;
   }
 };
