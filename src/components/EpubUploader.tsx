@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useEpubTranslator } from '../hooks/useEpubTranslator';
 import { languages, TargetLanguage } from '../types/languages';
 import { CancelModal } from './CancelModal';
-import { truncateFilename } from '../utils/utils';
+import { truncateFilename } from '../utils/fileUtils';
 
 interface EpubUploaderProps {
   targetLanguage?: TargetLanguage;

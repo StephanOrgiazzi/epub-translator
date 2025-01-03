@@ -47,13 +47,40 @@ VITE_DEEPSEEK_API_KEY=your_api_key_here
 npm run dev
 ```
 
+## Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── EpubUploader.tsx
+│   └── CancelModal.tsx
+├── hooks/              # Custom React hooks
+│   └── useEpubTranslator.ts
+├── services/           # External services integration
+│   └── translation.ts  # DeepSeek API integration
+├── types/             # TypeScript type definitions
+│   ├── languages.ts
+│   └── epub.ts
+└── utils/             # Utility functions
+    ├── fileUtils.ts          # File handling utilities
+    ├── splitContent.ts       # Content splitting logic
+    ├── translationQueue.ts   # Translation queue management
+    └── translationProcessor.ts # Translation processing logic
+```
+
 ## Usage
 
-1. Open the application in your browser
-2. Drop an EPUB file or click to select one
-3. Choose your target translation language
-4. Wait for the translation to complete
-5. Download your translated EPUB
+1. Upload an EPUB file by dragging and dropping or clicking the upload area
+2. Select your target language from the dropdown
+3. Click "Translate" to start the translation process
+4. Monitor the progress bar for translation status
+5. Once complete, the translated EPUB will automatically download
+
+The translation process:
+- Splits content into optimal chunks
+- Processes multiple chunks concurrently
+- Caches translations to avoid duplicate work
+- Preserves EPUB structure and formatting
 
 ## Technical Details
 
@@ -65,21 +92,18 @@ npm run dev
 - DeepSeek AI API
 
 ### Key Components
-- `EpubUploader`: Main component handling file upload and UI
-- `useEpubTranslator`: Custom hook managing translation logic
-- `translation.ts`: DeepSeek API integration
-- `content.ts`: EPUB content processing
 
-### Translation Process
-1. EPUB file is parsed and HTML content extracted
-2. Content is split into optimal chunks
-3. Chunks are translated in parallel
-4. Translated content is reassembled
-5. New EPUB is generated with preserved formatting
+- **EpubUploader**: Main component for handling file uploads and displaying translation progress
+- **useEpubTranslator**: Core hook managing the translation process
+- **Translation Utilities**:
+  - `fileUtils.ts`: Handles file operations (download, name truncation)
+  - `splitContent.ts`: Splits EPUB content into manageable chunks
+  - `translationQueue.ts`: Manages concurrent translation requests
+  - `translationProcessor.ts`: Orchestrates the translation process
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## Acknowledgments
 
