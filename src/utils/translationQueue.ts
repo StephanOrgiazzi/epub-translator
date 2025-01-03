@@ -9,7 +9,7 @@ export const createTranslationQueue = (maxConcurrent: number) => {
     maxConcurrent,
   };
 
-  const add = async <T>(task: () => Promise<T>): Promise<T> => {
+  const enqueueAndExecute = async <T>(task: () => Promise<T>): Promise<T> => {
     while (state.running >= state.maxConcurrent) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -21,5 +21,5 @@ export const createTranslationQueue = (maxConcurrent: number) => {
     }
   };
 
-  return { add };
+  return { enqueueAndExecute };
 };

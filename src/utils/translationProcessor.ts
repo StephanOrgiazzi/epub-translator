@@ -30,7 +30,7 @@ export const translateChunk = async (
   }
 
   // Use queue to manage concurrent API calls
-  const translation = await queue.add(() =>
+  const translation = await queue.enqueueAndExecute(() =>
     translateText(
       chunk,
       fileIndex,
@@ -48,25 +48,25 @@ export const translateChunk = async (
   return translation;
 };
 
-export const translateFile = async (
-  fileContent: string,
+const processChunksConcurrently = async (
+  chunks: string[],
   fileIndex: number,
   totalFiles: number,
   queue: ReturnType<typeof createTranslationQueue>,
   targetLanguage: TargetLanguage,
   translationCache: Map<string, string>,
   translationProgress: (progress: number) => void,
-  isCancelled: { current: boolean }
-) => {
-  const CONCURRENT_CHUNKS = 5;
-  const chunks = splitContent(fileContent);
-
+  isCancelled: { current: boolean },
+  concurrentChunks: number
+): Promise<string> => {
   let translatedContent = '';
+  
   for (const [index] of chunks.entries()) {
-    if (index % CONCURRENT_CHUNKS === 0) {
+    const isStartOfChunkGroup = index % concurrentChunks === 0;
+    if (isStartOfChunkGroup) {
       if (isCancelled.current) break;
 
-      const chunkGroup = chunks.slice(index, index + CONCURRENT_CHUNKS);
+      const chunkGroup = chunks.slice(index, index + concurrentChunks);
       const translations = await Promise.all(
         chunkGroup.map((chunk, groupIndex) =>
           translateChunk(
@@ -86,8 +86,34 @@ export const translateFile = async (
       translatedContent += translations.join('');
     }
   }
-  
+
   return translatedContent;
+};
+
+export const translateFile = async (
+  fileContent: string,
+  fileIndex: number,
+  totalFiles: number,
+  queue: ReturnType<typeof createTranslationQueue>,
+  targetLanguage: TargetLanguage,
+  translationCache: Map<string, string>,
+  translationProgress: (progress: number) => void,
+  isCancelled: { current: boolean }
+) => {
+  const CONCURRENT_CHUNKS = 5;
+  const chunks = splitContent(fileContent);
+
+  return processChunksConcurrently(
+    chunks,
+    fileIndex,
+    totalFiles,
+    queue,
+    targetLanguage,
+    translationCache,
+    translationProgress,
+    isCancelled,
+    CONCURRENT_CHUNKS
+  );
 };
 
 export const processEpubFile = async (
