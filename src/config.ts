@@ -1,1 +1,1 @@
-export const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
+export const DEEPSEEK_API_KEY = process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY;
