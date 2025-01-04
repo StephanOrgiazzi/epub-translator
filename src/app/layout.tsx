@@ -5,7 +5,8 @@ import './globals.css'
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  preload: true,
+  adjustFontFallback: true,
+  preload: false,
   fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif']
 })
 
