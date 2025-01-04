@@ -69,8 +69,8 @@ export default function RootLayout({
       <head>
         <link rel="canonical" href="https://epub-translator-yc1l.onrender.com" />
       </head>
-      <body className={`${inter.className} h-full antialiased bg-gradient-to-b from-teal-950 via-black to-black`}>
-        <main className="h-full flex items-center justify-center">
+      <body className={`${inter.className} h-full antialiased bg-gradient-to-b from-teal-950 via-black to-black overflow-x-hidden`}>
+        <main className="min-h-screen w-full flex sm:items-center sm:justify-center">
           {children}
         </main>
         <script
