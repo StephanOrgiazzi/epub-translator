@@ -2,7 +2,7 @@
 
 A modern web application that translates EPUB books while preserving their formatting. Built with Next.js 14, TypeScript, and Tailwind CSS.
 
-🌐 **[Try it live: epub-translator-yc1l.onrender.com](https://epub-translator-yc1l.onrender.com/)**
+🌐 **[Try it live: epub-translator-yc1l-ddh3.onrender.com/](https://epub-translator-yc1l-ddh3.onrender.com//)**
 
 ![EPUB Translator Screenshot](screenshot.png)
 
